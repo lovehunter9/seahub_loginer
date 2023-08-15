@@ -77,7 +77,22 @@ def proxy():
 
         # 将原始服务器的响应返回给客户端
         headers = dict(response.headers)
-        return Response(response.content, headers=headers, status=response.status_code)
+
+        status = response.status_code
+        if response.history:
+            print("重定向！！！！！！")
+            for r in response.history:
+                print(r.is_redirect, r.url, r.request, r.next)
+            # status = 302
+        if response.history and response.url != newurl:
+            status = 302
+            headers.update(
+                {
+                    "Location": response.url.replace("127.0.0.1:8000", "127.0.0.1:5000"),
+                    "Set-Cookie": f"sfsessionid={sfsessionid}"
+                }
+            )
+        return Response(response.content, headers=headers, status=status)
 
     if method == "POST":
         print("sfsessionid=", sfsessionid)
@@ -125,8 +140,9 @@ def proxy():
                 print("重定向！！！！！！")
                 for r in response.history:
                     print(r.is_redirect, r.url, r.request, r.next)
+                # status = 302
+            if response.history and response.url != newurl:
                 status = 302
-            if status == 302:
                 headers.update(
                     {
                         "Location": response.url.replace("127.0.0.1:8000", "127.0.0.1:5000"),
