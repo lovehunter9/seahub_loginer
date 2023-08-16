@@ -57,6 +57,7 @@ def proxy():
     global sfsessionid, session
     method = request.method
     url = request.url
+    print(method, url)
 
     if method == "GET":
         req_headers = dict(request.headers)
