@@ -59,10 +59,11 @@ def proxy():
     url = request.url
     print(method, url)
 
+    if not sfsessionid:
+        init_sfsessionid()
+
     if method == "GET":
         req_headers = dict(request.headers)
-        if not sfsessionid:
-            init_sfsessionid()
 
         if "/assets/bundles" in url:
             newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:3000")
@@ -100,8 +101,6 @@ def proxy():
         data = None
         try:
             req_headers = dict(request.headers)
-            if not sfsessionid:
-                init_sfsessionid()
 
             data = request.get_data().decode('utf-8')
             print(data)
