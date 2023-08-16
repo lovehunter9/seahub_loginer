@@ -74,6 +74,9 @@ def proxy():
     print(newurl)
 
     if method == "GET":
+        print("Before get request, sfsessionid=", sfsessionid)
+        if not sfsessionid:
+            print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
         req_headers = dict(request.headers)
 
         cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
@@ -94,7 +97,9 @@ def proxy():
                     sfsessionid = value.value
                     # session.cookies.update({"sfsessionid": sfsessionid})
                     break
-            print("sfsessionid=", sfsessionid)
+            print("After get set-cookie, sfsessionid=", sfsessionid)
+            if not sfsessionid:
+                print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
 
         status = response.status_code
         if response.history:
@@ -114,7 +119,9 @@ def proxy():
         return Response(response.content, headers=headers, status=status)
 
     if method == "POST":
-        print("sfsessionid=", sfsessionid)
+        print("Before post request, sfsessionid=", sfsessionid)
+        if not sfsessionid:
+            print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
         data = None
         try:
             req_headers = dict(request.headers)
@@ -144,7 +151,9 @@ def proxy():
                         sfsessionid = value.value
                         # session.cookies.update({"sfsessionid": sfsessionid})
                         break
-                print("sfsessionid=", sfsessionid)
+                print("After post set-cookie, sfsessionid=", sfsessionid)
+                if not sfsessionid:
+                    print("!!!!!!!!!!!!!!!!!!!!!!\n"*10)
             print(response)
             print(response.is_redirect, response.url, response.request, response.next)
             print(response.history)
