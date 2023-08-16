@@ -63,7 +63,7 @@ def proxy():
         init_sfsessionid()
 
     url_split = url.split("//")[1].split('/')
-    origin_host = url.split("//")[0]
+    origin_host = url.split("//")[0] + "//" + url_split[1]
     if "/assets/bundles" in url:
         url_split[0] = "http://127.0.0.1:3000"
     elif "/seafhttp" in url:
