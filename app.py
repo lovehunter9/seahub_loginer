@@ -57,18 +57,24 @@ def proxy():
     global sfsessionid, session
     method = request.method
     url = request.url
-    print(method, url)
+    print("\n", method, url)
 
     if not sfsessionid:
         init_sfsessionid()
 
+    url_split = url.split("//")[1].split('/')
+    origin_host = url.split("//")[0]
+    if "/assets/bundles" in url:
+        url_split[0] = "http://127.0.0.1:3000"
+    elif "/seafhttp" in url:
+        url_split[0] = "http://127.0.0.1:8082"
+    else:
+        url_split[0] = "http://127.0.0.1:8000"
+    newurl = "/".join(url_split)
+    print(newurl)
+
     if method == "GET":
         req_headers = dict(request.headers)
-
-        if "/assets/bundles" in url:
-            newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:3000")
-        else:
-            newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:8000")
 
         cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
         print("======cookie_dict:", cookie_dict)
@@ -90,7 +96,7 @@ def proxy():
             status = 302
             headers.update(
                 {
-                    "Location": response.url.replace("127.0.0.1:8000", "127.0.0.1:5000"),
+                    "Location": response.url.replace("http://127.0.0.1:8000", origin_host),
                     "Set-Cookie": f"sfsessionid={sfsessionid}"
                 }
             )
@@ -106,10 +112,6 @@ def proxy():
             print(data)
             print(request.data)
 
-            if "/assets/bundles" in url:
-                newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:3000")
-            else:
-                newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:8000")
             cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
             print("======cookie_dict:", cookie_dict)
             session.cookies.update(cookie_dict if cookie_dict else {"sfsessionid": sfsessionid})
@@ -145,7 +147,7 @@ def proxy():
                 status = 302
                 headers.update(
                     {
-                        "Location": response.url.replace("127.0.0.1:8000", "127.0.0.1:5000"),
+                        "Location": response.url.replace("http://127.0.0.1:8000", origin_host),
                         "Set-Cookie": f"sfsessionid={sfsessionid}"
                     }
                 )
