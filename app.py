@@ -44,6 +44,7 @@ def init_sfsessionid():
         if key == "sfsessionid":
             sfsessionid = value.value
     print("sfsessionid=", sfsessionid)
+    session.cookies.update({"sfsessionid": sfsessionid})
     return
 
 
@@ -94,13 +95,14 @@ def proxy():
             cookie = SimpleCookie()
             cookie.load(set_cookie)
             for key, value in cookie.items():
-                if key == "sfsessionid" and value.value:
+                if key == "sfsessionid":
                     sfsessionid = value.value
                     # session.cookies.update({"sfsessionid": sfsessionid})
                     break
-            print("After get set-cookie, sfsessionid=", sfsessionid)
             if not sfsessionid:
                 print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
+                init_sfsessionid()
+            print("After get set-cookie, sfsessionid=", sfsessionid)
 
         status = response.status_code
         if response.history:
@@ -149,13 +151,14 @@ def proxy():
                 cookie = SimpleCookie()
                 cookie.load(set_cookie)
                 for key, value in cookie.items():
-                    if key == "sfsessionid" and value.value:
+                    if key == "sfsessionid":
                         sfsessionid = value.value
                         # session.cookies.update({"sfsessionid": sfsessionid})
                         break
-                print("After post set-cookie, sfsessionid=", sfsessionid)
                 if not sfsessionid:
-                    print("!!!!!!!!!!!!!!!!!!!!!!\n"*10)
+                    init_sfsessionid()
+                    print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
+                print("After post set-cookie, sfsessionid=", sfsessionid)
             print(response)
             print(response.is_redirect, response.url, response.request, response.next)
             print(response.history)
