@@ -85,6 +85,16 @@ def proxy():
 
         # 将原始服务器的响应返回给客户端
         headers = dict(response.headers)
+        set_cookie = headers.get("Set-Cookie", "")
+        if set_cookie:
+            cookie = SimpleCookie()
+            cookie.load(set_cookie)
+            for key, value in cookie.items():
+                if key == "sfsessionid":
+                    sfsessionid = value.value
+                    # session.cookies.update({"sfsessionid": sfsessionid})
+                    break
+            print("sfsessionid=", sfsessionid)
 
         status = response.status_code
         if response.history:
