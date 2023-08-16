@@ -80,7 +80,8 @@ def proxy():
         #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:3000")
         # else:
         #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:8000")
-
+        print(f"\nSession Headers before GET {newurl}: ", session.headers, session.cookies, session.auth,
+             session.proxies, "\n")
         cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
         print("======cookie_dict:", cookie_dict)
         session.cookies.update(cookie_dict if cookie_dict else {"sfsessionid": sfsessionid})
@@ -121,6 +122,8 @@ def proxy():
             #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:3000")
             # else:
             #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:8000")
+            print(f"\nSession Headers before POST {newurl}: ", session.headers, session.cookies, session.auth,
+                  session.proxies, "\n")
             cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
             print("======cookie_dict:", cookie_dict)
             session.cookies.update(cookie_dict if cookie_dict else {"sfsessionid": sfsessionid})
@@ -128,6 +131,65 @@ def proxy():
                                     data=request.data) #, cookies={"sfsessionid": sfsessionid})
 
             print(f"\nSession Headers after POST {newurl}: ", session.headers, session.cookies, session.auth, session.proxies, "\n")
+
+            # # 将原始服务器的响应返回给客户端
+            headers = dict(response.headers)
+            print(headers)
+
+            set_cookie = headers.get("Set-Cookie", "")
+            if set_cookie:
+                cookie = SimpleCookie()
+                cookie.load(set_cookie)
+                for key, value in cookie.items():
+                    if key == "sfsessionid":
+                        sfsessionid = value.value
+                        # session.cookies.update({"sfsessionid": sfsessionid})
+                        break
+                print("sfsessionid=", sfsessionid)
+            print(response)
+            print(response.is_redirect, response.url, response.request, response.next)
+            print(response.history)
+            status = response.status_code
+            if response.history:
+                print("重定向！！！！！！")
+                for r in response.history:
+                    print(r.is_redirect, r.url, r.request, r.next)
+                # status = 302
+            if response.history and response.url != newurl:
+                status = 302
+                headers.update(
+                    {
+                        "Location": response.url.replace("http://127.0.0.1:8000", origin_host),# "127.0.0.1:5000"),
+                        "Set-Cookie": f"sfsessionid={sfsessionid}"
+                    }
+                )
+            return Response(response.content, status=status, headers=headers)
+        except Exception:
+            traceback.print_exc()
+            return data
+
+    if method == "PUT":
+        print("sfsessionid=", sfsessionid)
+        data = None
+        try:
+            req_headers = dict(request.headers)
+
+            data = request.get_data().decode('utf-8')
+            print(data)
+            print(request.data)
+
+            # if "/assets/bundles" in url:
+            #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:3000")
+            # else:
+            #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:8000")
+            print(f"\nSession Headers before PUT {newurl}: ", session.headers, session.cookies, session.auth,
+                  session.proxies, "\n")
+            cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
+            print("======cookie_dict:", cookie_dict)
+            session.cookies.update(cookie_dict if cookie_dict else {"sfsessionid": sfsessionid})
+            response = session.put(newurl, headers=request.headers, data=request.data) #, cookies={"sfsessionid": sfsessionid})
+
+            print(f"\nSession Headers after PUT {newurl}: ", session.headers, session.cookies, session.auth, session.proxies, "\n")
 
             # # 将原始服务器的响应返回给客户端
             headers = dict(response.headers)
