@@ -78,12 +78,13 @@ def proxy():
         print("Before get request, sfsessionid=", sfsessionid)
         if not sfsessionid:
             print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
+            init_sfsessionid()
         req_headers = dict(request.headers)
 
         cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
         print("======cookie_dict:", cookie_dict)
         session.cookies.update(cookie_dict if cookie_dict else {"sfsessionid": sfsessionid})
-        response = session.get(newurl, headers=request.headers) # , cookies={"sfsessionid": sfsessionid},)
+        response = session.get(newurl, headers=request.headers, cookies={"sfsessionid": sfsessionid},)
 
         print(f"\nSession Headers after GET {newurl}: ", session.headers, session.cookies, session.auth, session.proxies, "\n")
 
@@ -125,6 +126,7 @@ def proxy():
         print("Before post request, sfsessionid=", sfsessionid)
         if not sfsessionid:
             print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
+            init_sfsessionid()
         data = None
         try:
             req_headers = dict(request.headers)
@@ -137,7 +139,7 @@ def proxy():
             print("======cookie_dict:", cookie_dict)
             session.cookies.update(cookie_dict if cookie_dict else {"sfsessionid": sfsessionid})
             response = session.post(newurl, headers=request.headers,
-                                    data=request.data) #, cookies={"sfsessionid": sfsessionid})
+                                    data=request.data, cookies={"sfsessionid": sfsessionid})
 
             print(f"\nSession Headers after POST {newurl}: ", session.headers, session.cookies, session.auth, session.proxies, "\n")
 
