@@ -90,10 +90,11 @@ def proxy():
         headers = dict(response.headers)
         set_cookie = headers.get("Set-Cookie", "")
         if set_cookie:
+            print("After get set-cookie =", set_cookie)
             cookie = SimpleCookie()
             cookie.load(set_cookie)
             for key, value in cookie.items():
-                if key == "sfsessionid":
+                if key == "sfsessionid" and value.value:
                     sfsessionid = value.value
                     # session.cookies.update({"sfsessionid": sfsessionid})
                     break
@@ -144,10 +145,11 @@ def proxy():
 
             set_cookie = headers.get("Set-Cookie", "")
             if set_cookie:
+                print("After post set-cookie =", set_cookie)
                 cookie = SimpleCookie()
                 cookie.load(set_cookie)
                 for key, value in cookie.items():
-                    if key == "sfsessionid":
+                    if key == "sfsessionid" and value.value:
                         sfsessionid = value.value
                         # session.cookies.update({"sfsessionid": sfsessionid})
                         break
