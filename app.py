@@ -106,7 +106,7 @@ def proxy():
             status = 302
             headers.update(
                 {
-                    "Location": response.url.replace("http://127.0.0.1:8000", origin_host),
+                    "Location": response.url, #.replace("http://127.0.0.1:8000", origin_host),
                     "Set-Cookie": f"sfsessionid={sfsessionid}"
                 }
             )
@@ -157,7 +157,7 @@ def proxy():
                 status = 302
                 headers.update(
                     {
-                        "Location": response.url.replace("http://127.0.0.1:8000", origin_host),
+                        "Location": response.url, # .replace("http://127.0.0.1:8000", origin_host),
                         "Set-Cookie": f"sfsessionid={sfsessionid}"
                     }
                 )
