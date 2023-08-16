@@ -44,6 +44,7 @@ def init_sfsessionid():
         if key == "sfsessionid":
             sfsessionid = value.value
     print("sfsessionid=", sfsessionid)
+    session.cookies.update({"sfsessionid": sfsessionid})
     return
 
 
@@ -57,7 +58,7 @@ def proxy():
     global sfsessionid, session
     method = request.method
     url = request.url
-    print(method, url)
+    print("\n", method, url)
 
     if not sfsessionid:
         init_sfsessionid()
@@ -66,30 +67,43 @@ def proxy():
     origin_host = url.split("//")[0] + "//" + url_split[0]
     if "/assets/bundles" in url:
         url_split[0] = "http://127.0.0.1:3000"
-    # elif "/seafhttp" in url:
-    #     url_split[0] = "http://127.0.0.1:8082"
+    elif "/seafhttp" in url:
+        url_split[0] = "http://127.0.0.1:8082"
     else:
         url_split[0] = "http://127.0.0.1:8000"
     newurl = "/".join(url_split)
     print(newurl)
 
     if method == "GET":
+        print("Before get request, sfsessionid=", sfsessionid)
+        if not sfsessionid:
+            print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
+            init_sfsessionid()
         req_headers = dict(request.headers)
-
-        # if "/assets/bundles" in url:
-        #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:3000")
-        # else:
-        #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:8000")
 
         cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
         print("======cookie_dict:", cookie_dict)
         session.cookies.update(cookie_dict if cookie_dict else {"sfsessionid": sfsessionid})
-        response = session.get(newurl, headers=request.headers) # , cookies={"sfsessionid": sfsessionid},)
+        response = session.get(newurl, headers=request.headers, cookies={"sfsessionid": sfsessionid},)
 
         print(f"\nSession Headers after GET {newurl}: ", session.headers, session.cookies, session.auth, session.proxies, "\n")
 
         # 将原始服务器的响应返回给客户端
         headers = dict(response.headers)
+        set_cookie = headers.get("Set-Cookie", "")
+        if set_cookie:
+            print("After get set-cookie =", set_cookie)
+            cookie = SimpleCookie()
+            cookie.load(set_cookie)
+            for key, value in cookie.items():
+                if key == "sfsessionid":
+                    sfsessionid = value.value
+                    # session.cookies.update({"sfsessionid": sfsessionid})
+                    break
+            if not sfsessionid:
+                print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
+                init_sfsessionid()
+            print("After get set-cookie, sfsessionid=", sfsessionid)
 
         status = response.status_code
         if response.history:
@@ -101,14 +115,18 @@ def proxy():
             status = 302
             headers.update(
                 {
-                    "Location": response.url.replace("http://127.0.0.1:8000", origin_host), # "127.0.0.1:5000"),
+                    "Location": response.url.replace("http://127.0.0.1:8000", origin_host),
                     "Set-Cookie": f"sfsessionid={sfsessionid}"
                 }
             )
+            print("302 Location:", headers["Location"])
         return Response(response.content, headers=headers, status=status)
 
     if method == "POST":
-        print("sfsessionid=", sfsessionid)
+        print("Before post request, sfsessionid=", sfsessionid)
+        if not sfsessionid:
+            print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
+            init_sfsessionid()
         data = None
         try:
             req_headers = dict(request.headers)
@@ -117,15 +135,11 @@ def proxy():
             print(data)
             print(request.data)
 
-            # if "/assets/bundles" in url:
-            #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:3000")
-            # else:
-            #     newurl = url.replace("http://127.0.0.1:5000", "http://127.0.0.1:8000")
             cookie_dict = requests.utils.dict_from_cookiejar(session.cookies)
             print("======cookie_dict:", cookie_dict)
             session.cookies.update(cookie_dict if cookie_dict else {"sfsessionid": sfsessionid})
             response = session.post(newurl, headers=request.headers,
-                                    data=request.data) #, cookies={"sfsessionid": sfsessionid})
+                                    data=request.data, cookies={"sfsessionid": sfsessionid})
 
             print(f"\nSession Headers after POST {newurl}: ", session.headers, session.cookies, session.auth, session.proxies, "\n")
 
@@ -135,6 +149,7 @@ def proxy():
 
             set_cookie = headers.get("Set-Cookie", "")
             if set_cookie:
+                print("After post set-cookie =", set_cookie)
                 cookie = SimpleCookie()
                 cookie.load(set_cookie)
                 for key, value in cookie.items():
@@ -142,7 +157,10 @@ def proxy():
                         sfsessionid = value.value
                         # session.cookies.update({"sfsessionid": sfsessionid})
                         break
-                print("sfsessionid=", sfsessionid)
+                if not sfsessionid:
+                    init_sfsessionid()
+                    print("!!!!!!!!!!!!!!!!!!!!!!\n" * 10)
+                print("After post set-cookie, sfsessionid=", sfsessionid)
             print(response)
             print(response.is_redirect, response.url, response.request, response.next)
             print(response.history)
@@ -156,10 +174,11 @@ def proxy():
                 status = 302
                 headers.update(
                     {
-                        "Location": response.url.replace("http://127.0.0.1:8000", origin_host),# "127.0.0.1:5000"),
+                        "Location": response.url.replace("http://127.0.0.1:8000", origin_host),
                         "Set-Cookie": f"sfsessionid={sfsessionid}"
                     }
                 )
+                print("302 Location:", headers["Location"])
             return Response(response.content, status=status, headers=headers)
         except Exception:
             traceback.print_exc()
@@ -167,6 +186,5 @@ def proxy():
 
 
 if __name__ == '__main__':
-    init_sfsessionid()
+    # init_sfsessionid()
     app.run()
-
